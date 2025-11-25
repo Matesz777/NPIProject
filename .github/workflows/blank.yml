@@ -1,0 +1,8 @@
+name: Hello Actions
+on: push
+jobs:
+ say-hello:
+   runs-on: ubuntu-latest
+   steps:
+   - name: Wypisz komunikat
+     run: echo "Hello from GitHub Actions!"
