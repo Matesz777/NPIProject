@@ -1,8 +1,26 @@
-name: Hello Actions
-on: push
+name: Ruletka
+on:
+  push:
+    branches:
+      - main
+
 jobs:
- say-hello:
-   runs-on: ubuntu-latest
-   steps:
-   - name: Wypisz komunikat
-     run: echo "Hello from GitHub Actions!"
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      -name: Checkout
+      -uses: actions/checkout@v4
+
+      -name: SetUp Python
+      -uses: actions/setup-python@v5
+      -with:
+        python-version: "3.13"
+      
+      name: install tools
+      run: python -m pip install --upgrade pip
+            pip instal flake8 pytest
+      name: lint
+      run: flake8 ruletkaDocker.py
+
+      -name: run test
+      run: pytest 
