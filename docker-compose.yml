@@ -1,0 +1,8 @@
+services:
+  ruletka:
+    build: .
+    container_name: ruletka
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./data:/data

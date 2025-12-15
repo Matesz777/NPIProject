@@ -1,8 +1,69 @@
 import random
+import sqlite3
+from datetime import datetime
 
 ammo = 0      
 shots = 0     
-mag = []      
+mag = []
+
+DB_PATH = "/data/ruletka.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS game_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            played_at TEXT NOT NULL,
+            ammo INTEGER NOT NULL,
+            death_shot INTEGER,
+            survived INTEGER NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def save_round(ammo: int, death_shot: int | None):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    survived = 1 if death_shot is None else 0
+
+    cur.execute("""
+        INSERT INTO game_history (played_at, ammo, death_shot, survived)
+        VALUES (?, ?, ?, ?)
+    """, (datetime.now().isoformat(timespec="seconds"), ammo, death_shot, survived))
+
+    conn.commit()
+    conn.close()
+
+def show_history(limit: int = 10):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, played_at, ammo, death_shot, survived
+        FROM game_history
+        ORDER BY id DESC
+        LIMIT ?
+    """, (limit,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    print(f"\n=== Ostatnie {limit} gier ===")
+    if not rows:
+        print("Brak zapisanych gier.\n")
+        return
+
+    for game_id, played_at, ammo, death_shot, survived in rows:
+        if survived == 1:
+            result_txt = "PRZEŻYŁ"
+        else:
+            result_txt = f"ZGON na strzale {death_shot}"
+        print(f"#{game_id} | {played_at} | ammo={ammo} | {result_txt}")
+    print()
+
 
 
 def restart_game():
@@ -68,6 +129,7 @@ def normal_game():
             if current_chamber == 1:
                 print("ZGON! Trafiłeś na nabój.")
                 print("Ta runda się skończyła. Wciśnij 'r' żeby losować nowy bęben, albo 'q' żeby wrócić do menu.\n")
+                save_round(ammo, shots)
             else:
                 print("CYK! Jeszcze żyjesz.\n")
 
@@ -116,6 +178,7 @@ def main_menu():
         print("[g] – normalna gra")
         print("[s] – symulacja wielu gier")
         print("[q] – wyjście")
+        print("[h] – historia gier")
         mode = input("Wybierz tryb: ").strip().lower()
 
         if mode == "g":
@@ -133,9 +196,12 @@ def main_menu():
         elif mode == "q":
             print("Koniec programu.")
             break
+        elif mode == "h":
+            show_history(20)
         else:
             print("Nieznany tryb.")
 
 
 if __name__ == "__main__":
+    init_db()
     main_menu()
