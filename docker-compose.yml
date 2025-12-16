@@ -4,5 +4,25 @@ services:
     container_name: ruletka
     stdin_open: true
     tty: true
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_NAME: ruletka
+      DB_USER: ruletka
+      DB_PASSWORD: ruletka
+    ports:
+      - "8000:8000"
+
+  db:
+    image: postgres:16
+    container_name: ruletka-db
+    environment:
+      POSTGRES_DB: ruletka
+      POSTGRES_USER: ruletka
+      POSTGRES_PASSWORD: ruletka
     volumes:
-      - ./data:/data
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
